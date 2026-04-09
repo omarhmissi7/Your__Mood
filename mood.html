@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="mood1.png">
+  <title>Mood Journal App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 750px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #cbd5e1;
+    }
+
+    .form-box {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
+    .form-box select,
+    .form-box input,
+    .form-box textarea,
+    .form-box button {
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .form-box textarea {
+      min-height: 120px;
+      resize: none;
+    }
+
+    .form-box button {
+      background: #38bdf8;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .form-box button:hover {
+      background: #0ea5e9;
+    }
+
+    .entries-section {
+      margin-top: 40px;
+    }
+
+    .entries-section h2 {
+      margin-bottom: 20px;
+    }
+
+    .entry-card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .entry-card h3 {
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+    }
+
+    .entry-card p {
+      margin-bottom: 8px;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .entry-card small {
+      color: #94a3b8;
+    }
+
+    .delete-btn {
+      margin-top: 12px;
+      background: crimson;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .delete-btn:hover {
+      opacity: 0.8;
+    }
+
+    .empty {
+      text-align: center;
+      color: #94a3b8;
+      margin-top: 20px;
+      font-size: 1.1rem;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .form-box,
+      .entry-card {
+        padding: 15px;
+      }
+
+      .form-box select,
+      .form-box input,
+      .form-box textarea,
+      .form-box button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Mood Journal</h1>
+    <p class="subtitle">Write your feelings every day 📝</p>
+
+    <div class="form-box">
+      <select id="mood">
+        <option value="😄">😄 Happy</option>
+        <option value="😐">😐 Normal</option>
+        <option value="😢">😢 Sad</option>
+        <option value="😡">😡 Angry</option>
+        <option value="😴">😴 Tired</option>
+      </select>
+
+      <input type="text" id="title" placeholder="Title..." />
+      <textarea id="description" placeholder="Write about your day..."></textarea>
+      <input type="date" id="date" />
+
+      <button id="saveBtn">Save Entry</button>
+    </div>
+
+    <div class="entries-section">
+      <h2>Your Entries</h2>
+      <div id="entries"></div>
+    </div>
+  </div>
+
+  <script>
+    const mood = document.getElementById("mood");
+    const title = document.getElementById("title");
+    const description = document.getElementById("description");
+    const date = document.getElementById("date");
+    const saveBtn = document.getElementById("saveBtn");
+    const entries = document.getElementById("entries");
+
+    let journalEntries = JSON.parse(localStorage.getItem("journalEntries")) || [];
+
+    displayEntries();
+
+    saveBtn.addEventListener("click", () => {
+      if (title.value.trim() === "" || description.value.trim() === "" || date.value === "") {
+        alert("Please fill all fields!");
+        return;
+      }
+
+      const entry = {
+        id: Date.now(),
+        mood: mood.value,
+        title: title.value,
+        description: description.value,
+        date: date.value
+      };
+
+      journalEntries.push(entry);
+      localStorage.setItem("journalEntries", JSON.stringify(journalEntries));
+
+      displayEntries();
+      clearForm();
+    });
+
+    function displayEntries() {
+      entries.innerHTML = "";
+
+      if (journalEntries.length === 0) {
+        entries.innerHTML = `<p class="empty">No entries yet 😶</p>`;
+        return;
+      }
+
+      journalEntries
+        .slice()
+        .reverse()
+        .forEach(entry => {
+          entries.innerHTML += `
+            <div class="entry-card">
+              <h3>${entry.mood} ${entry.title}</h3>
+              <p>${entry.description}</p>
+              <small>${entry.date}</small><br>
+              <button class="delete-btn" onclick="deleteEntry(${entry.id})">Delete</button>
+            </div>
+          `;
+        });
+    }
+
+    function deleteEntry(id) {
+      journalEntries = journalEntries.filter(entry => entry.id !== id);
+      localStorage.setItem("journalEntries", JSON.stringify(journalEntries));
+      displayEntries();
+    }
+
+    function clearForm() {
+      title.value = "";
+      description.value = "";
+      date.value = "";
+      mood.value = "😄";
+    }
+  </script>
+
+</body>
+</html>
